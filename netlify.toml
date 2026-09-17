@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/*"
+  to = "/assessment-sim.html"
+  status = 200
