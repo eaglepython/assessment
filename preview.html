@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="refresh" content="0; url=assessment-sim.html#preview" />
+  <title>Loading preview mode...</title>
+  <style>
+    body{margin:0;display:grid;place-items:center;min-height:100vh;background:#eef6f7;font-family:Inter,Segoe UI,sans-serif;color:#14333a}
+    .msg{padding:20px 24px;border:1px solid #d7e5e7;border-radius:16px;background:white;box-shadow:0 16px 36px rgba(9,56,63,.12)}
+  </style>
+</head>
+<body>
+  <div class="msg">Opening the preview version of the assessment app…</div>
+  <script>
+    try { localStorage.setItem('httAssessmentMode','preview'); } catch (e) {}
+    window.location.replace('assessment-sim.html#preview');
+  </script>
+</body>
+</html>

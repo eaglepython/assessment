@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0b5f6b" />
+<title>Head-to-Toe Assessment Simulator</title>
+<style>
+  :root{
+    --bg:#eef6f7;--panel:#ffffff;--ink:#14333a;--muted:#64777b;
+    --brand:#0b7f8c;--brand2:#10a8b7;--accent:#f6b94a;--good:#22a06b;
+    --warn:#e89b23;--bad:#d84a4a;--line:#d7e5e7;--soft:#f7fbfc;
+    --shadow:0 18px 38px rgba(10,62,67,.12);--r:22px;
+    --glow:0 0 0 1px rgba(11,127,140,.06), 0 18px 24px rgba(11,127,140,.08);
+  }
+  body.classic-mode{
+    --bg:#f7f1ea; --panel:#fffdfb; --ink:#2b1f1a; --muted:#6d5d52; --brand:#9b613b; --brand2:#d59a57; --accent:#d9ae6d; --good:#467d5d; --warn:#c9872d; --bad:#bf4d4d; --line:#eadcc9; --soft:#faf5ef; --shadow:0 18px 40px rgba(93,66,42,.14); --r:22px; --glow:0 0 0 1px rgba(155,97,59,.05), 0 20px 30px rgba(155,97,59,.10);
+    background:radial-gradient(circle at top left, rgba(213,154,87,.18), transparent 23%), linear-gradient(180deg,#f5efe9 0%,#f9f4ef 52%,#f5f0eb 100%); color:var(--ink);
+  }
+  body.preview-mode{
+    --bg:#061a20; --panel:#0d2e39; --ink:#edfaff; --muted:#bfe7ee; --brand:#59f0d2; --brand2:#7ec7ff; --accent:#ffc857; --good:#67f0b4; --warn:#ffca61; --bad:#ff8a8a; --line:#2a5b6c; --soft:#112b34; --shadow:0 20px 42px rgba(5,18,22,.55); --r:24px; --glow:0 0 0 1px rgba(89,240,210,.2), 0 20px 36px rgba(89,240,210,.18);
+    background:radial-gradient(circle at top left, rgba(89,240,210,.18), transparent 20%), linear-gradient(180deg,#041d25 0%,#071f2a 42%,#0c2932 100%); color:var(--ink);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(circle at top left, rgba(129,220,230,.25), transparent 24%), linear-gradient(180deg,#e7f5f6 0,#f7fbfc 48%,#edf6f7 100%);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+  body.classic-mode, body.preview-mode{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  button,select,input{font:inherit}
+  button{cursor:pointer;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;}
+  button:hover{transform:translateY(-1px)}
+  .app{max-width:1320px;margin:auto;padding:14px 14px 100px}
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(238,246,247,.78);backdrop-filter:blur(18px);padding:10px 0 12px;border-bottom:1px solid rgba(215,229,231,.8);box-shadow:0 8px 24px rgba(11,127,140,.04)}
+  body.classic-mode .topbar{background:linear-gradient(180deg,rgba(255,251,247,.95) 0%, rgba(248,241,232,.9) 100%);position:sticky;padding:14px 16px 8px;border-bottom:1px solid rgba(155,97,59,.12);box-shadow:0 12px 28px rgba(93,66,42,.08)}
+  body.preview-mode .topbar{background:rgba(7,27,34,.72);border-color:rgba(74,224,208,.18);box-shadow:0 12px 26px rgba(3,12,17,.26)}
+  .toprow{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,var(--brand),var(--brand2));display:grid;place-items:center;color:white;font-weight:900;box-shadow:var(--shadow)}
+  body.classic-mode .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#a96742,#d59a57);box-shadow:0 12px 18px rgba(155,97,59,.20)}
+  body.preview-mode .logo{background:linear-gradient(145deg,#31d6b7,#4fa7ff);box-shadow:0 10px 24px rgba(74,224,208,.20)}
+  h1{font-size:clamp(19px,3vw,29px);margin:0;line-height:1.1}
+  body.classic-mode h1{font-size:1.28rem;letter-spacing:.2px}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  body.classic-mode .sub{margin:2px 0 0;font-size:.78rem}
+  .mode-descriptor{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.72);font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-top:6px}
+  body.preview-mode .mode-descriptor{background:rgba(9,29,35,.8);border-color:rgba(89,240,210,.24);color:#9feee3}
+  .chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip,.timer{border:1px solid var(--line);background:white;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px;display:flex;gap:7px;align-items:center}
+  body.classic-mode .chip,.timer{padding:8px 13px;border-radius:999px;display:flex;align-items:center;font-size:.76rem}
+  body.preview-mode .chip, body.preview-mode .timer{background:rgba(12,30,35,.92);border-color:var(--line);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .timer.running{border-color:#9ed9dd;color:#075e67}
+  body.preview-mode .timer.running{border-color:rgba(89,240,210,.7);color:#aafef1}
+  .timer.urgent{border-color:#efb0b0;color:#a92525;background:#fff5f5}
+  body.preview-mode .timer.urgent{border-color:rgba(255,138,138,.85);color:#ffd5d5;background:rgba(67,16,23,.9)}
+  .mode-switch{display:inline-flex;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;box-shadow:var(--glow)}
+  .mode-switch button{border:0;background:transparent;padding:7px 10px;border-radius:10px;color:var(--muted);font-weight:900;font-size:12px;letter-spacing:.02em}
+  .mode-switch button.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:white;box-shadow:0 8px 18px rgba(11,127,140,.22)}
+  body.classic-mode .mode-switch{background:rgba(255,250,246,.94);border-color:rgba(155,97,59,.14);box-shadow:0 8px 18px rgba(155,97,59,.10)}
+  body.classic-mode .mode-switch button{color:#5d4b3f}
+  body.classic-mode .mode-switch button.active{background:linear-gradient(135deg,#af7043,#dca15b);color:#fffaf5;box-shadow:0 12px 18px rgba(175,112,67,.20)}
+  body.preview-mode .mode-switch{background:rgba(10,26,31,.78);border-color:var(--line);box-shadow:0 12px 24px rgba(0,0,0,.28)}
+  body.preview-mode .mode-switch button{color:#bdd5dc}
+  body.preview-mode .mode-switch button.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#021e27;box-shadow:0 12px 24px rgba(74,224,208,.22)}
+  .primary,.ghost,.mini{border:0;border-radius:13px;font-weight:850}
+  .primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:11px 15px;box-shadow:0 8px 20px rgba(11,127,140,.22)}
+  .ghost{background:white;border:1px solid var(--line);color:var(--ink);padding:10px 13px}
+  body.preview-mode .ghost{background:rgba(15,43,52,.85);border-color:var(--line);color:var(--ink)}
+  .mini{padding:8px 10px;background:#eef7f8;color:#0a6b75}
+  .main{display:grid;grid-template-columns:minmax(390px,.9fr) minmax(450px,1.3fr);gap:16px;margin-top:16px}
+  body.classic-mode .main{grid-template-columns:1fr;gap:14px}
+  .panel{background:rgba(255,255,255,.96);border:1px solid rgba(215,229,231,.95);border-radius:var(--r);box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .panel::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg, rgba(255,255,255,.28), transparent 38%, rgba(11,127,140,.03));pointer-events:none}
+  body.classic-mode .panel{background:linear-gradient(180deg,rgba(255,253,250,.98),rgba(249,242,233,.98));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 14px 14px}
+  body.classic-mode .panel::before{background:linear-gradient(135deg, rgba(214,165,105,.12), transparent 36%, rgba(155,97,59,.04));}
+  body.preview-mode .panel{background:linear-gradient(180deg,rgba(14,39,48,.98),rgba(11,29,36,.97));border-color:var(--line);box-shadow:0 18px 30px rgba(1,8,11,.34)}
+  body.preview-mode .panel::before{background:linear-gradient(135deg, rgba(89,240,210,.08), transparent 32%, rgba(126,199,255,.04));}
+  .visual{padding:15px;position:relative;overflow:hidden}
+  .visual:before{content:"";position:absolute;inset:-50% auto auto -10%;width:260px;height:260px;background:radial-gradient(circle,#c6eff2 0,transparent 67%);opacity:.7;pointer-events:none}
+  body.classic-mode .visual{padding:14px 14px 0}
+  .visual-head{display:flex;justify-content:space-between;gap:8px;align-items:center;position:relative;z-index:2}
+  .seg{display:flex;background:#eef4f5;padding:4px;border-radius:13px;gap:4px}
+  .seg button{border:0;background:transparent;padding:8px 12px;border-radius:10px;color:#557075;font-weight:800}
+  .seg button.active{background:white;color:var(--brand);box-shadow:0 2px 8px rgba(20,70,76,.08)}
+  .progress-wrap{margin:13px 0 8px;position:relative;z-index:2}
+  .progress-line{height:10px;background:#e7eff0;border-radius:999px;overflow:hidden}
+  .progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--brand),#38c5a7);transition:width .35s ease;border-radius:999px}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+  .patient-stage{position:relative;display:grid;place-items:center;min-height:620px;padding-top:4px}
+  body.classic-mode .patient-stage{min-height:520px;padding-top:0}
+  .avatar{width:min(100%,420px);height:auto;filter:drop-shadow(0 18px 22px rgba(14,62,69,.12));user-select:none}
+  body.classic-mode .avatar{width:100%;max-width:280px}
+  .region{transition:.22s ease;cursor:pointer;outline:none}
+  .region .hit{fill:#dce8ea;stroke:#94b3b8;stroke-width:2.2}
+  .region:hover .hit,.region:focus .hit{filter:brightness(.98);stroke:#0b7f8c;stroke-width:3}
+  .region.active .hit{fill:#7ed9e1;stroke:#087986;stroke-width:4}
+  .region.done .hit{fill:#7bd7a7;stroke:#137e53;stroke-width:3}
+  .region.alert .hit{fill:#f29e9e;stroke:#b72e2e;stroke-width:4}
+  .region.pending .hit{fill:#f7d69a;stroke:#bf7d0e;stroke-width:3}
+  .body-label{font-size:13px;font-weight:900;fill:#183b42;pointer-events:none;text-anchor:middle}
+  .organ-label{font-size:11px;font-weight:900;fill:#17393f;pointer-events:none;text-anchor:middle}
+  .frontback{font-size:11px;fill:#6a7c80;font-weight:800}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:-4px}
+  .sysbadge{border:1px solid var(--line);background:white;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:850;color:#426168}
+  .sysbadge.done{background:#e8f8f0;color:#16714b;border-color:#b5e3ca}.sysbadge.alert{background:#fff1f1;color:#b53131;border-color:#f2b7b7}
+  .side-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  body.classic-mode .side-actions{display:flex;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .quick{flex:1;min-width:120px;border:1px solid var(--line);background:linear-gradient(180deg,#fbfefe,#f0f9fa);border-radius:14px;padding:11px 10px;text-align:left;box-shadow:0 8px 18px rgba(12,67,74,.04);}
+  .quick:hover{border-color:rgba(11,127,140,.55);box-shadow:0 12px 20px rgba(11,127,140,.08);background:linear-gradient(180deg,#ffffff,#eefbfc)}
+  body.classic-mode .quick{flex:none;min-width:120px}
+  body.preview-mode .quick{background:linear-gradient(180deg,rgba(19,46,55,.94),rgba(12,34,41,.96));border-color:var(--line);box-shadow:0 10px 22px rgba(3,10,13,.28);color:var(--ink)}
+  body.preview-mode .quick b, body.preview-mode .quick span{color:var(--ink)}
+  .quick b{display:block}.quick span{font-size:11px;color:var(--muted)}
+  body.preview-mode .quick b{font-size:13px;letter-spacing:.02em}
+  .workspace{display:flex;flex-direction:column;min-height:760px}
+  body.classic-mode .workspace{min-height:auto;border-radius:var(--radius);padding:0}
+  .workspace-head{padding:16px 16px 0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .eyebrow{font-size:11px;font-weight:950;letter-spacing:.11em;text-transform:uppercase;color:var(--brand)}
+  .section-title{font-size:26px;margin:3px 0 4px;line-height:1.1}
+  .section-sub{color:var(--muted);font-size:13px}
+  .scorebox{min-width:92px;text-align:center;background:#f0f7f8;border:1px solid var(--line);border-radius:16px;padding:9px 11px}
+  body.classic-mode .scorebox{background:linear-gradient(180deg,#f8efe4,#fdfaf6);border-color:rgba(155,97,59,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+  body.preview-mode .scorebox{background:rgba(12,30,35,.9);border-color:var(--line)}
+  .scorebox b{font-size:22px}.scorebox span{display:block;font-size:10px;color:var(--muted);font-weight:800}
+  .tabs{display:flex;gap:7px;padding:14px 16px 0;overflow:auto}
+  .tab{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:12px;padding:9px 11px;font-weight:850;color:#49666c;box-shadow:0 4px 10px rgba(12,67,74,.03)}
+  .tab:hover{border-color:#9ed9dd}
+  .tab.active{background:linear-gradient(135deg,#e6f8fa,#f5feff);color:#086b75;border-color:#a6dde2;box-shadow:0 10px 18px rgba(8,107,117,.08)}
+  body.preview-mode .tab{background:rgba(15,41,49,.9);border-color:var(--line);color:var(--ink);box-shadow:0 8px 18px rgba(3,10,13,.2)}
+  body.preview-mode .tab.active{background:linear-gradient(135deg,rgba(89,240,210,.2),rgba(126,199,255,.12));color:var(--ink);border-color:rgba(89,240,210,.7);box-shadow:0 12px 22px rgba(89,240,210,.12)}
+  .content{padding:16px;display:grid;gap:12px}
+  .card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--soft),rgba(255,255,255,.94));padding:14px;box-shadow:0 8px 20px rgba(12,67,74,.04)}
+  .card h3{margin:0 0 8px;font-size:16px}
+  .nclex-banner{background:linear-gradient(135deg,#eaf8ff,#f9fdff);border-color:#8cc9dc;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+  .nclex-banner .eyebrow{color:#0f5d6d;font-size:10px;letter-spacing:.13em}
+  .nclex-banner strong{display:block;font-size:16px;line-height:1.5;color:#0f2f36;font-weight:900}
+  .quizq{font-size:17px;font-weight:900;margin-bottom:10px}
+  .options{display:grid;gap:8px}
+  .option{border:1px solid #cfdfe1;background:white;padding:12px 13px;border-radius:13px;text-align:left;font-weight:800;color:#2c4d54;min-height:48px;box-shadow:0 6px 14px rgba(18,54,60,.03)}
+  .option:hover{border-color:#86cad0;box-shadow:0 10px 18px rgba(13,91,99,.08)}.option.correct{background:#eaf8f0;border-color:#8ed1ad;color:#126341}.option.wrong{background:#fff0f0;border-color:#e5a2a2;color:#9d2e2e}
+  body.preview-mode .option{background:rgba(14,38,46,.9);border-color:var(--line);color:var(--ink);box-shadow:0 8px 18px rgba(3,10,13,.2)}
+  body.preview-mode .option.correct{background:rgba(33,82,62,.78);border-color:rgba(103,240,180,.8);color:#ebfff3}.option.wrong{background:#fff0f0;border-color:#e5a2a2;color:#9d2e2e}
+  .feedback{margin-top:10px;border-radius:12px;padding:10px 11px;font-size:13px;display:none}.feedback.show{display:block}.feedback.good{background:#e9f8ef;color:#155f42}.feedback.bad{background:#fff1f1;color:#9b2e2e}
+  .checklist{display:grid;gap:7px}
+  .checkitem{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:start;border:1px solid #dbe7e8;background:linear-gradient(180deg,#ffffff,#f7fbfc);border-radius:13px;padding:10px;box-shadow:0 6px 14px rgba(18,54,60,.02)}
+  .checknum{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#e8f3f4,#d7eeef);color:#0b6f79;display:grid;place-items:center;font-weight:950;font-size:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+  body.preview-mode .checkitem{background:rgba(14,38,46,.9);border-color:var(--line);box-shadow:0 8px 18px rgba(3,10,13,.2)}
+  body.preview-mode .checkitem p{color:#cfeaf0}
+  body.preview-mode .checknum{background:linear-gradient(135deg,rgba(89,240,210,.18),rgba(126,199,255,.14));color:#bffff2;border:1px solid rgba(89,240,210,.32)}
+  .checkitem b{font-size:13px}.checkitem p{margin:3px 0 0;color:#63777b;font-size:12px;line-height:1.35}
+  .checkmark{width:28px;height:28px;border:1px solid #c7dadd;background:#fff;border-radius:9px;font-size:16px}.checkmark.done{background:#22a06b;color:#fff;border-color:#22a06b}
+  .perform{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .finding{display:none;margin-top:10px;border-left:5px solid var(--good);background:#eefaf4;padding:12px;border-radius:12px;line-height:1.45}.finding.show{display:block}.finding.alert{border-color:var(--bad);background:#fff1f1}
+  .finding .tag{font-size:11px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;color:#5f777b}
+  .tip{background:linear-gradient(135deg,#fff7e7,#fff);border:1px solid #f0d39b}.tip b{color:#8a5b00}
+  .tipline{display:flex;gap:10px;align-items:flex-start}
+  .tipicon{width:34px;height:34px;border-radius:10px;background:#f6b94a;display:grid;place-items:center;flex:none}
+  .report-card{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(244,250,251,.96));border:1px solid var(--line)}
+  body.preview-mode .report-card{background:linear-gradient(180deg,rgba(17,43,52,.95),rgba(11,31,38,.97));border-color:rgba(140,218,232,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .report-summary{display:grid;gap:10px}
+  .summary-row{display:grid;gap:6px;padding:12px 14px;border-radius:14px;background:rgba(12,67,74,.03);border:1px solid rgba(12,67,74,.08)}
+  body.preview-mode .summary-row{background:rgba(8,28,34,.8);border-color:rgba(142,201,214,.14)}
+  .summary-row strong{font-size:15px;color:var(--ink);line-height:1.2;letter-spacing:-.02em}
+  body.preview-mode .summary-row strong{color:#eafcff}
+  .summary-row span{font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block}
+  body.preview-mode .summary-row span{color:#9feaf1}
+  .summary-row p{margin:0;color:var(--ink);line-height:1.5;font-size:13px}
+  body.preview-mode .summary-row p{color:#d8eff3}
+  .refgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .refcard{background:white;border:1px solid var(--line);border-radius:12px;padding:10px}.refcard b{font-size:12px}.refcard span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+  body.preview-mode .refcard{background:rgba(12,30,35,.9);border-color:rgba(142,201,214,.14);color:#eafcff;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+  body.preview-mode .refcard b{color:#eafcff}
+  body.preview-mode .refcard span{color:#cdeaf0}
+  .bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:60;width:min(900px,calc(100% - 18px));background:linear-gradient(180deg,rgba(16,48,54,.96),rgba(9,33,39,.97));backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:8px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;box-shadow:0 20px 42px rgba(0,0,0,.28)}
+  body.classic-mode .bottomnav{background:linear-gradient(180deg,rgba(16,48,54,.96),rgba(9,33,39,.97))}
+  .bottomnav button{border:0;background:transparent;color:#cfe3e6;border-radius:13px;padding:8px 4px;font-size:10px;font-weight:900;min-height:50px;transition:all .2s ease}.bottomnav button:hover{background:rgba(255,255,255,.06)}.bottomnav button.active{background:linear-gradient(135deg,#ffffff,#eafafc);color:#0b6570;box-shadow:0 10px 20px rgba(255,255,255,.12)}.bottomnav span{display:block;font-size:18px;margin-bottom:2px}
+  .modal{position:fixed;inset:0;background:rgba(8,30,34,.58);display:none;place-items:center;z-index:100;padding:16px}.modal.show{display:grid}.modalbox{width:min(760px,100%);max-height:88vh;overflow:auto;background:white;border-radius:24px;padding:18px;box-shadow:0 25px 60px rgba(0,0,0,.35)}
+  .modalhead{display:flex;justify-content:space-between;gap:10px;align-items:center}.modalhead h2{margin:0}.close{border:0;background:#eef4f5;width:38px;height:38px;border-radius:12px;font-size:20px}
+  .source-note{font-size:12px;color:#5f7377;background:#f4f8f9;padding:10px;border-radius:12px;margin-top:10px}
+  .source-image-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+  .source-image-card{border:1px solid var(--line);border-radius:16px;background:#f9fbfc;padding:8px;box-shadow:0 8px 18px rgba(12,67,74,.05)}
+  .source-image-card img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid rgba(15,40,47,.08);background:#fff}
+  .source-image-card strong{display:block;margin-top:8px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--brand)}
+  .save-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .start-overlay{position:fixed;inset:0;background:linear-gradient(180deg, rgba(5,26,30,.82), rgba(8,36,42,.9));z-index:200;display:grid;place-items:center;padding:20px;backdrop-filter:blur(6px)}
+  .start-overlay.hidden{display:none}
+  .start-card{width:min(700px,100%);background:rgba(249,253,255,.98);border:2px solid rgba(17,77,88,.14);border-radius:26px;padding:24px 20px;box-shadow:0 30px 70px rgba(0,0,0,.18)}
+  .start-header{text-align:center;margin-bottom:18px}
+  .start-header h2{margin:0 0 10px;font-size:clamp(28px,5vw,42px);line-height:1.1;color:#102c34}
+  .start-header p{margin:0;color:#2c4d54;font-size:18px;line-height:1.4}
+  .difficulty-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+  .difficulty-card{border:2px solid #9dd1d9;background:linear-gradient(180deg,#f2fbff,#eaf6fa);border-radius:18px;padding:18px 16px;text-align:left;cursor:pointer;transition:all .2s ease;min-height:220px;display:flex;flex-direction:column;justify-content:flex-start;color:#10303a}
+  .difficulty-card.active{border-color:#0f6b7a;box-shadow:0 16px 28px rgba(11,127,140,.12);background:linear-gradient(180deg,#dcf6f8,#eefcff)}
+  .difficulty-card h3{margin:0 0 10px;font-size:clamp(24px,2vw,34px);line-height:1.1;color:#102d35}
+  .difficulty-card p{margin:0;color:#244a52;font-size:18px;line-height:1.5;font-weight:600}
+  .difficulty-tag{display:inline-block;margin-bottom:12px;padding:6px 10px;border-radius:999px;background:#dff7fb;border:1px solid #7bcad9;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#0d5d6d}
+  .start-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .start-actions .primary, .start-actions .ghost{min-width:190px;display:inline-flex;justify-content:center;align-items:center;padding:18px 22px;font-size:18px;font-weight:900}
+  .start-actions .ghost{background:linear-gradient(180deg,#324a51,#263d43);color:#edf9fd;border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 22px rgba(14,31,38,.18)}
+  .start-actions .primary{background:linear-gradient(135deg,#74dfe8,#a0ecda);color:#0d2e38;border:1px solid rgba(12,60,68,.14);box-shadow:0 12px 22px rgba(77,182,190,.22)}
+  .kbd{padding:1px 6px;border:1px solid #cddbdd;border-bottom-width:2px;border-radius:6px;font-size:11px;background:white}
+  .toast{position:fixed;top:90px;left:50%;transform:translateX(-50%) translateY(-14px);opacity:0;z-index:120;background:#173d43;color:white;padding:11px 14px;border-radius:999px;font-weight:800;font-size:13px;transition:.25s;pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .complete-banner{display:none;background:linear-gradient(135deg,#dff7e9,#f7fffb);border:1px solid #9edab9;border-radius:18px;padding:16px;text-align:center;box-shadow:0 18px 32px rgba(34,160,107,.08)}.complete-banner.show{display:block}.complete-banner h3{margin:0 0 5px;font-size:22px}
+  .tiny{font-size:11px;color:var(--muted)}
+  .pulse{animation:pulse 1.2s infinite}@keyframes pulse{50%{transform:scale(1.04)}}
+  @media(max-width:900px){
+    .app{padding:10px 10px 102px}.main{grid-template-columns:1fr}.patient-stage{min-height:520px}.avatar{width:min(100%,380px)}.workspace{min-height:auto}.topbar{position:relative}.workspace-head{padding-top:14px}.section-title{font-size:23px}
+  }
+  @media(max-width:560px){
+    .chips .chip{display:none}.visual{padding:12px}.patient-stage{min-height:500px}.refgrid{grid-template-columns:1fr}.workspace-head{align-items:center}.scorebox{min-width:78px}.tabs{padding-left:12px}.content{padding:12px}.checkitem{grid-template-columns:30px 1fr 28px}.bottomnav{bottom:7px}.bottomnav button{font-size:9px}.sub{max-width:260px}.avatar{width:350px;max-width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="app">
+  <div class="start-overlay" id="startOverlay">
+    <div class="start-card">
+      <div class="start-header">
+        <h2>Choose your difficulty</h2>
+        <p>Select the learning level before you begin the assessment flow.</p>
+      </div>
+      <div class="difficulty-grid">
+        <button class="difficulty-card active" type="button" data-difficulty="beginner">
+          <span class="difficulty-tag">Beginner</span>
+          <h3>Guided</h3>
+          <p>Clear prompts, regular feedback, and simpler cues for learning the check-off sequence.</p>
+        </button>
+        <button class="difficulty-card" type="button" data-difficulty="intermediate">
+          <span class="difficulty-tag">Intermediate</span>
+          <h3>Standard</h3>
+          <p>Balanced practice with realistic patient findings and normal clinical timing.</p>
+        </button>
+        <button class="difficulty-card" type="button" data-difficulty="advanced">
+          <span class="difficulty-tag">Advanced</span>
+          <h3>Challenge</h3>
+          <p>Faster flow, more abnormal findings, and stronger prioritization pressure.</p>
+        </button>
+      </div>
+      <div class="start-actions">
+        <button class="ghost" type="button" id="startPreviewBtn">Preview mode</button>
+        <button class="primary" type="button" id="startAssessmentBtn">Start assessment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="toprow">
+      <div class="brand">
+        <div class="logo">HTT</div>
+        <div>
+          <h1>Head-to-Toe Assessment Simulator</h1>
+          <div id="modeDescriptor" class="mode-descriptor">Premium Care Flow</div>
+          <div id="headerSub" class="sub">VNSG 1502 practice • focused bedside assessment • calm clinical flow</div>
+        </div>
+      </div>
+      <div class="chips">
+        <div class="mode-switch" aria-label="App mode switch">
+          <button type="button" class="mode-btn active" data-mode="luxury">Version 1</button>
+          <button type="button" class="mode-btn" data-mode="dashboard">Version 2</button>
+        </div>
+        <div class="timer" id="timer">⏱ <span id="timerText">30:00</span></div>
+        <div class="chip">Progress <span id="topProgress">0%</span></div>
+        <button class="ghost" id="sourceBtn">Source basis</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <section class="panel visual">
+      <div class="visual-head">
+        <div>
+          <div class="eyebrow">Interactive patient</div>
+          <div style="font-weight:900;font-size:18px" id="scenarioLabel">Normal adult check-off</div>
+        </div>
+        <div class="seg" aria-label="patient view">
+          <button class="active" data-view="front">Front</button>
+          <button data-view="back">Back</button>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-line"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-label"><span id="progressText">0 of 10 sections complete</span><span id="accuracyText">Accuracy 100%</span></div>
+      </div>
+
+      <div class="patient-stage">
+        <svg class="avatar" id="frontSvg" viewBox="0 0 360 660" role="img" aria-label="front view patient body map">
+          <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <text x="20" y="28" class="frontback">FRONT VIEW</text>
+          <g class="region" data-section="neuro" tabindex="0" role="button" aria-label="Head neck neurological"><circle class="hit" cx="180" cy="72" r="48"/><text class="body-label" x="180" y="76">HEAD</text></g>
+          <g class="region" data-section="neuro" tabindex="0"><rect class="hit" x="158" y="116" width="44" height="37" rx="14"/><text class="organ-label" x="180" y="140">NECK</text></g>
+          <g class="region" data-section="resp" tabindex="0"><path class="hit" d="M113 160 Q180 132 247 160 L260 286 Q180 318 100 286 Z"/><text class="body-label" x="180" y="190">CHEST</text><ellipse cx="145" cy="232" rx="37" ry="60" fill="#cde8ef" stroke="#7caab3"/><ellipse cx="215" cy="232" rx="37" ry="60" fill="#cde8ef" stroke="#7caab3"/><text class="organ-label" x="145" y="235">LUNG</text><text class="organ-label" x="215" y="235">LUNG</text></g>
+          <g class="region" data-section="cardio" tabindex="0"><path class="hit" d="M180 212 C165 188 130 199 134 228 C138 261 180 279 180 279 C180 279 222 261 226 228 C230 199 195 188 180 212Z" style="fill:#e7dfe3;stroke:#a28a96"/><text class="organ-label" x="180" y="239">HEART</text></g>
+          <g class="region" data-section="gi" tabindex="0"><rect class="hit" x="112" y="294" width="136" height="128" rx="36"/><text class="body-label" x="180" y="350">ABDOMEN</text><path d="M138 325 Q180 300 222 325 Q240 354 222 390 Q180 418 138 390 Q120 354 138 325" fill="#f7e1bd" stroke="#c99b55"/><text class="organ-label" x="180" y="361">GI</text></g>
+          <g class="region" data-section="gu" tabindex="0"><path class="hit" d="M120 418 Q180 450 240 418 L228 492 Q180 516 132 492 Z"/><text class="body-label" x="180" y="470">GU</text></g>
+          <g class="region" data-section="msk" tabindex="0"><path class="hit" d="M111 165 Q86 175 76 210 L42 360 Q39 379 55 383 Q72 387 78 369 L119 246 Z"/><path class="hit" d="M249 165 Q274 175 284 210 L318 360 Q321 379 305 383 Q288 387 282 369 L241 246 Z"/><text class="organ-label" x="58" y="270" transform="rotate(-78 58 270)">ARM</text><text class="organ-label" x="302" y="270" transform="rotate(78 302 270)">ARM</text></g>
+          <g class="region" data-section="msk" tabindex="0"><path class="hit" d="M136 490 Q154 503 176 500 L166 635 Q163 650 145 650 Q128 650 130 632 Z"/><path class="hit" d="M224 490 Q206 503 184 500 L194 635 Q197 650 215 650 Q232 650 230 632 Z"/><text class="organ-label" x="149" y="564" transform="rotate(4 149 564)">LEG</text><text class="organ-label" x="211" y="564" transform="rotate(-4 211 564)">LEG</text></g>
+          <g id="skinHalo" opacity="0"><ellipse cx="180" cy="335" rx="148" ry="310" fill="none" stroke="#22a06b" stroke-width="10" stroke-dasharray="12 10"/></g>
+        </svg>
+
+        <svg class="avatar" id="backSvg" viewBox="0 0 360 660" role="img" aria-label="back view patient body map" style="display:none">
+          <text x="20" y="28" class="frontback">BACK VIEW</text>
+          <g class="region" data-section="neuro" tabindex="0"><circle class="hit" cx="180" cy="72" r="48"/><text class="body-label" x="180" y="76">HEAD</text></g>
+          <g class="region" data-section="neuro" tabindex="0"><rect class="hit" x="158" y="116" width="44" height="37" rx="14"/><text class="organ-label" x="180" y="140">NECK</text></g>
+          <g class="region" data-section="resp" tabindex="0"><path class="hit" d="M113 160 Q180 132 247 160 L260 286 Q180 318 100 286 Z"/><ellipse cx="145" cy="230" rx="38" ry="66" fill="#cde8ef" stroke="#7caab3"/><ellipse cx="215" cy="230" rx="38" ry="66" fill="#cde8ef" stroke="#7caab3"/><text class="body-label" x="180" y="185">POSTERIOR LUNGS</text></g>
+          <g class="region" data-section="skin" tabindex="0"><rect class="hit" x="113" y="294" width="134" height="188" rx="44"/><text class="body-label" x="180" y="360">SKIN / BACK</text><text class="organ-label" x="180" y="383">integrity • lesions</text><text class="organ-label" x="180" y="400">pressure areas</text></g>
+          <g class="region" data-section="msk" tabindex="0"><path class="hit" d="M111 165 Q86 175 76 210 L42 360 Q39 379 55 383 Q72 387 78 369 L119 246 Z"/><path class="hit" d="M249 165 Q274 175 284 210 L318 360 Q321 379 305 383 Q288 387 282 369 L241 246 Z"/></g>
+          <g class="region" data-section="msk" tabindex="0"><path class="hit" d="M136 475 Q154 495 176 492 L166 635 Q163 650 145 650 Q128 650 130 632 Z"/><path class="hit" d="M224 475 Q206 495 184 492 L194 635 Q197 650 215 650 Q232 650 230 632 Z"/></g>
+        </svg>
+      </div>
+
+      <div class="badge-row" id="badgeRow"></div>
+      <div class="side-actions">
+        <button class="quick" data-open="prep"><b>🧼 Start / Prep</b><span>Hand hygiene, IDs, allergies</span></button>
+        <button class="quick" data-open="pain"><b>🎯 Pain</b><span>Location • intensity • characteristics</span></button>
+        <button class="quick" data-open="skin"><b>🧴 Skin</b><span>Turgor • edema • integrity</span></button>
+        <button class="quick" data-open="safety"><b>🛡 Safety</b><span>Bed low • rails x2 • call light</span></button>
+      </div>
+    </section>
+
+    <section class="panel workspace">
+      <div class="workspace-head">
+        <div><div class="eyebrow" id="sectionEyebrow">CHECK-OFF STEP 1</div><h2 class="section-title" id="sectionTitle">Preparation</h2><div class="section-sub" id="sectionSub">Begin exactly as you would in the 30-minute verification.</div></div>
+        <div class="scorebox"><b id="score">100</b><span>practice score</span></div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+      <div class="content" id="content"></div>
+    </section>
+  </div>
+</div>
+
+<nav class="bottomnav" aria-label="app navigation">
+  <button class="active" data-nav="patient"><span>🧍</span>Patient</button>
+  <button data-nav="record"><span>📝</span>Record</button>
+  <button data-nav="next"><span>➡️</span>Next</button>
+  <button data-nav="scenario"><span>🎭</span>Scenario</button>
+  <button data-nav="timer"><span>⏱️</span>Timer</button>
+  <button data-nav="reset"><span>↺</span>Reset</button>
+</nav>
+
+<div class="modal" id="sourceModal" aria-hidden="true">
+  <div class="modalbox">
+    <div class="modalhead"><h2>Source basis used in this simulator</h2><button class="close" data-close>×</button></div>
+    <p>This app is built from the two resources you supplied: <b>(1) the VNSG 1502 Head-to-Toe Assessment Verification check-off</b> and <b>(2) the pocket assessment reference pages</b>.</p>
+    <div class="card"><h3>Check-off sequence represented</h3><div id="sourceList" class="checklist"></div></div>
+    <div class="card"><h3>Reference forms used</h3><div class="source-image-grid">
+      <div class="source-image-card">
+        <img src="WhatsApp%20Image%202026-09-17%20at%2010.03.15%20AM.jpeg" alt="Assessment form reference page 1" />
+        <strong>Form A</strong>
+      </div>
+      <div class="source-image-card">
+        <img src="WhatsApp%20Image%202026-09-17%20at%2010.03.16%20AM.jpeg" alt="Assessment form reference page 2" />
+        <strong>Form B</strong>
+      </div>
+    </div></div>
+    <div class="card"><h3>Assessment data capture</h3>
+      <div class="save-actions">
+        <button class="primary" id="saveRecordBtn">Save current record</button>
+        <button class="ghost" id="exportRecordsBtn">Export JSON</button>
+      </div>
+      <div class="report-actions">
+        <button class="ghost" id="printReportBtn">Print student report</button>
+      </div>
+      <div class="tiny" id="recordMeta" style="margin-top:8px">No saved assessment records yet.</div>
+    </div>
+    <div class="source-note">Educational simulation only. It is designed for skill-check practice and NCLEX-style prioritization, not as clinical decision support for a real patient. Facility policy and instructor directions take priority.</div>
+  </div>
+</div>
+
+<div class="modal" id="scenarioModal" aria-hidden="true">
+  <div class="modalbox">
+    <div class="modalhead"><h2>Choose a practice patient</h2><button class="close" data-close>×</button></div>
+    <div class="checklist" id="scenarioList"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY='httAssessmentRecords';
+const difficultyConfig={
+  beginner:{label:'Guided', timer:2100, hints:true},
+  intermediate:{label:'Standard', timer:1800, hints:false},
+  advanced:{label:'Challenge', timer:1200, hints:false}
+};
+const sectionOrder=['prep','pain','neuro','resp','cardio','gi','gu','msk','skin','safety'];
+const sections={
+ prep:{title:'Preparation',sub:'Set up safely before touching the patient.',region:'global',quiz:{q:'What is the best first action before beginning the physical assessment?',opts:['Raise the bed and begin palpation','Perform hand hygiene, then apply gloves as indicated','Ask the patient to stand for gait testing','Auscultate the apical pulse'],correct:1,why:'The check-off starts with supplies, hand hygiene, gloves, introduction, identification, allergies, explanation, then comfortable bed height.'},steps:[
+  ['Gather supplies','Have the equipment you need before beginning.'],['Hand hygiene / gloves','Perform hand hygiene and don gloves as indicated.'],['Introduce self & explain','Tell the patient who you are and what you will do.'],['Use 2 patient identifiers','Verify identity before the assessment.'],['Verify allergies','Ask and confirm allergy status.'],['Position bed safely','Raise to a comfortable working height while assessing.']
+ ],finding:'The patient confirms name and date of birth, reports no known allergies, and agrees to the assessment.',tip:'NCLEX priority: identify the correct patient and use standard precautions before non-emergency care.'},
+ pain:{title:'Pain Assessment',sub:'Location • intensity • characteristics',region:'global',quiz:{q:'Which finding is subjective data?',opts:['Patient grimaces when turning','Patient says, “My pain is 7 out of 10.”','Incision is red','Pulse is 104/min'],correct:1,why:'Pain intensity is reported by the patient. Grimacing, redness, and pulse rate are objective findings.'},steps:[
+  ['Ask location','Where is the pain? Does it radiate?'],['Ask intensity','Use the 0–10 pain scale or the course-approved scale.'],['Ask characteristics','Quality, timing, aggravating/relieving factors; use OPQRST when appropriate.']
+ ],finding:'Patient reports pain 2/10, dull, localized to the right shoulder after sleeping on it; no radiation.',tip:'NCLEX tip: pain is whatever the patient says it is; reassess after an intervention.'},
+ neuro:{title:'Head & Neck / Neurological',sub:'LOC • orientation • PERRLA • senses • symmetry • neck',region:'neuro',quiz:{q:'What is the best opening neurological assessment sequence?',opts:['Deep tendon reflexes first','LOC/alertness and orientation, then pupils and focused cranial findings','Palpate both carotids at the same time','Test gait before speaking to the patient'],correct:1,why:'The verification starts with level of consciousness, alertness, orientation, then PERRLA and the rest of the head/neck assessment.'},steps:[
+  ['LOC & orientation','Assess alertness and orientation to person, place, and date.'],['Eyes / PERRLA','Assess pupils, sclera, conjunctiva, and peripheral vision.'],['Nose','Inspect nares and visible structures.'],['Ears / hearing','Inspect ears and assess hearing.'],['Mouth & face','Assess lips, oral mucosa, teeth, gums, smile symmetry, and swallowing.'],['Neck / lymph / carotids','Inspect and palpate neck and lymph nodes. Check carotid pulses one at a time for strength and regularity.']
+ ],finding:'Alert and oriented to person, place, date, and situation. Pupils 3 mm, equal, round, reactive to light and accommodation. Sclera clear; conjunctiva pink. Hearing intact to conversation. Smile symmetric; swallow intact. Neck supple, no enlarged nodes; carotids 2+ and regular bilaterally.',tip:'NCLEX tip: PERRLA = pupils equal, round, reactive to light and accommodation. Compare right and left; never palpate both carotids simultaneously.'},
+ resp:{title:'Respiratory System',sub:'Inspect breathing, then auscultate anterior and posterior lung fields.',region:'resp',quiz:{q:'After observing chest symmetry and breathing pattern, what should you do next for this check-off?',opts:['Palpate the abdomen','Auscultate breath sounds in all lobes anteriorly and posteriorly','Check pedal pulses','Assess bowel sounds'],correct:1,why:'The respiratory check-off specifically requires chest symmetry/breathing pattern, then breath sounds in all lobes anteriorly and posteriorly, then cough.'},steps:[
+  ['Chest symmetry & pattern','Assess rate, depth, effort, symmetry, and accessory muscle use.'],['Anterior lung sounds','Use the diaphragm; compare side to side in a systematic pattern.'],['Posterior lung sounds','Listen from upper to lower fields, comparing bilateral sites.'],['Cough','Ask about cough; note productive vs nonproductive and sputum if present.']
+ ],finding:'RR 16/min, even and unlabored. Chest expands symmetrically. Breath sounds clear bilaterally anteriorly and posteriorly. No cough.',tip:'NCLEX tip: stridor is a life-threatening upper-airway sound that requires immediate attention. Wheeze = narrowed airways; crackles often reflect fluid; rhonchi may improve after coughing.'},
+ cardio:{title:'Cardiovascular System',sub:'Apical pulse • perfusion • peripheral pulses',region:'cardio',quiz:{q:'Where and how should the apical pulse be assessed for this verification?',opts:['Right 2nd intercostal space for 15 seconds','PMI, left 5th intercostal space near the midclavicular line, for 1 full minute','Radial pulse for 10 seconds','Carotid pulse bilaterally at once'],correct:1,why:'The checklist requires auscultating the apical pulse at the PMI for rate for one full minute, rhythm, and strength.'},steps:[
+  ['Apical pulse at PMI','Count for 1 full minute; assess rate, rhythm, and strength.'],['Capillary refill','Assess upper and lower extremities bilaterally.'],['Peripheral pulses','Palpate radial and dorsalis pedis pulses bilaterally.'],['Compare sides','Note equality, strength, skin color/temperature, and edema.']
+ ],finding:'Apical pulse 76/min, regular. Capillary refill 2 seconds in fingers and toes. Radial and dorsalis pedis pulses 2+ and equal bilaterally. No edema.',tip:'NCLEX tip: capillary refill under 3 seconds is the course reference for normal adult perfusion. Compare bilateral pulses and extremities.'},
+ gi:{title:'Gastrointestinal System',sub:'Low Fowler’s • inspect → auscultate → palpate',region:'gi',quiz:{q:'What is the correct abdominal assessment order for this check-off?',opts:['Palpate → auscultate → inspect','Inspect → palpate → auscultate','Inspect → auscultate → palpate','Auscultate → inspect → palpate'],correct:2,why:'Auscultate before palpation so touching the abdomen does not alter bowel activity and your findings.'},steps:[
+  ['Position','Place the bed in low Fowler’s as instructed.'],['Inspect','Observe contour, symmetry, skin, scars, tubes, wounds, or distention.'],['Auscultate','Listen in all four quadrants before palpation.'],['Palpate','Assess all four quadrants for softness, tenderness, rigidity, guarding, or masses.'],['GI history','Ask about nausea, vomiting, and last bowel movement.']
+ ],finding:'Abdomen soft and nondistended. Bowel sounds present in all four quadrants. No guarding or tenderness. Patient denies nausea/vomiting and reports last BM yesterday.',tip:'NCLEX tip: the abdomen is the classic exception—auscultate before palpating.'},
+ gu:{title:'Genitourinary System',sub:'Voiding pattern • perineal assessment verbalization • catheter output if present',region:'gu',quiz:{q:'Which action best matches the GU check-off?',opts:['Perform a detailed invasive GU exam without explanation','Assess voiding pattern and verbalize perineal assessment; if catheter is present, assess urine characteristics and output','Skip GU if the patient is continent','Only ask about fluid intake'],correct:1,why:'That wording follows the verification sheet and keeps the assessment within the expected student step.'},steps:[
+  ['Voiding pattern','Ask about frequency, urgency, dysuria, continence, and last void.'],['Perineal area','Verbalize that you would assess the perineal area while maintaining privacy.'],['Catheter if present','Assess urine color/clarity and output; inspect tubing and drainage system.']
+ ],finding:'Patient voids independently; urine described as clear yellow. Denies dysuria, urgency, or incontinence. No urinary catheter present.',tip:'NCLEX tip: protect privacy and dignity during GU assessment; report unexpected urine color, output, or painful voiding according to policy.'},
+ msk:{title:'Musculoskeletal System',sub:'Sensation • independent movement • bilateral strength',region:'msk',quiz:{q:'How should extremity strength be assessed?',opts:['Only test the dominant side','Compare upper and lower extremities bilaterally, using movement against resistance when appropriate','Assess strength only if the patient reports pain','Use passive ROM only'],correct:1,why:'The verification sheet requires sensation, independent movement, and strength in upper and lower extremities bilaterally.'},steps:[
+  ['Sensation','Compare light touch/sensation bilaterally.'],['Independent movement','Ask the patient to move upper and lower extremities.'],['Strength','Compare bilateral grip and push/pull strength.'],['ROM / mobility','Observe limitations, pain, gait or assistive devices when appropriate.']
+ ],finding:'Sensation intact bilaterally. Full independent movement in all extremities. Grip and push/pull strength 5/5 and equal.',tip:'NCLEX tip: compare sides. The pocket reference grades muscle strength from 0 (no movement) to 5 (normal strength).'},
+ skin:{title:'Integumentary System',sub:'Turgor • edema • color • temperature • moisture • lesions • integrity',region:'skin',quiz:{q:'Which set best matches the required integumentary assessment?',opts:['Color only','Turgor, edema, color, temperature, moisture, lesions, skin integrity, plus IVs/tubes/drains/dressings','Nails only','Pressure injury risk only'],correct:1,why:'That is the exact set of elements emphasized in the verification sheet.'},steps:[
+  ['Skin survey','Assess color, temperature, moisture, lesions, and overall integrity.'],['Turgor','Assess hydration-related skin recoil at an appropriate site.'],['Edema','Inspect and palpate for swelling/pitting.'],['Lines / drains / dressings','Assess IVs, tubes, drains, and surgical dressings. If an IV is present, verify solution and infusion rate.']
+ ],finding:'Skin warm, dry, intact, and appropriate in color. Turgor returns promptly. No edema or lesions. 20G IV in left forearm with normal saline infusing at 75 mL/hr; site clean, dry, and without visible redness or swelling.',tip:'NCLEX tip: inspect pressure-prone areas and all lines/tubes. The pocket reference uses 1+ to 4+ for pitting edema.'},
+ safety:{title:'Safety & Finish',sub:'Physiological safety • psychological safety • hand hygiene',region:'global',quiz:{q:'Before leaving the patient, what is the best final safety action?',opts:['Leave the bed elevated for the next nurse','Bed low, side rails up x2, call light within reach, preserve privacy, remove gloves and perform hand hygiene','Turn off all alarms','Leave the patient uncovered so the skin can be observed'],correct:1,why:'This mirrors the final verification item: physiological safety, psychological safety/privacy, remove gloves, and hand hygiene.'},steps:[
+  ['Physiological safety','Side rails up x2, bed in low position, call light within reach.'],['Psychological safety','Maintain privacy and dignity; do not leave the patient unnecessarily uncovered.'],['Finish PPE','Remove gloves appropriately.'],['Hand hygiene','Perform hand hygiene after the assessment.'],['Document / report','Document findings and promptly communicate abnormalities per policy.']
+ ],finding:'Patient is comfortable, covered, bed low and locked, two side rails up, call light within reach. Gloves removed and hand hygiene completed.',tip:'NCLEX tip: safe positioning, privacy, and hand hygiene are part of the assessment—not an afterthought.'}
+};
+
+const scenarios={
+ normal:{name:'Normal adult check-off',desc:'Best for learning the exact sequence. Mostly expected findings.',mods:{}},
+ resp:{name:'Respiratory concern',desc:'Practice recognizing an abnormal breathing pattern and adventitious sound.',mods:{resp:{finding:'RR 28/min with increased effort. Chest expansion remains symmetric. Expiratory wheezes are heard bilaterally; patient has a frequent nonproductive cough.',alert:true},cardio:{finding:'Apical pulse 104/min and regular. Capillary refill 2 seconds. Peripheral pulses 2+ and equal.',alert:true}}},
+ neuro:{name:'Neurological concern',desc:'Practice noticing orientation and pupil abnormalities.',mods:{neuro:{finding:'Patient is alert but oriented to person and place only; cannot state the correct date. Right pupil 3 mm and brisk; left pupil 5 mm and sluggish. Smile remains symmetric; speech is clear.',alert:true}}},
+ perf:{name:'Perfusion / edema concern',desc:'Practice capillary refill, pulse comparison, and edema grading.',mods:{cardio:{finding:'Apical pulse 88/min and regular. Finger capillary refill 2 seconds; toe capillary refill 4 seconds. Radial pulses 2+ bilaterally; dorsalis pedis pulses 1+ bilaterally. Bilateral ankle edema 2+.',alert:true},skin:{finding:'Skin warm and intact. Bilateral ankle edema 2+. Lower legs are shiny with mild swelling; no open lesions. IV site clean and dry.',alert:true}}}
+};
+const nclexPriorities={
+  prep:'NCLEX priority: identify the patient, use standard precautions, and ensure safety before assessment.',
+  pain:'NCLEX priority: pain is subjective data and should be assessed before treatment or reassessment.',
+  neuro:'NCLEX priority: assess level of consciousness, orientation, and pupils before focusing on other findings.',
+  resp:'NCLEX priority: assess breathing pattern, effort, and oxygenation before proceeding to comfort or discharge actions.',
+  cardio:'NCLEX priority: assess perfusion, apical pulse, and circulation before making assumptions about stability.',
+  gi:'NCLEX priority: assess abdominal symptoms with inspection and auscultation before palpation to avoid altering findings.',
+  gu:'NCLEX priority: protect privacy and assess urinary pattern or catheter status using a respectful, patient-centered approach.',
+  msk:'NCLEX priority: compare bilateral strength and movement to detect asymmetry or neurological impairment.',
+  skin:'NCLEX priority: assess skin integrity, edema, and device sites because these reflect perfusion and safety risks.',
+  safety:'NCLEX priority: complete patient safety steps before leaving the bedside: bed low, rails, call light, privacy, and hand hygiene.'
+};
+
+let state={current:'prep',scenario:'normal',done:{},checked:{},answered:{},attempts:0,correct:0,timer:1800,timerRunning:false,timerId:null,view:'front',difficulty:'beginner',started:false};
+
+const content=document.getElementById('content'),tabs=document.getElementById('tabs');
+function scenarioFinding(id){return scenarios[state.scenario].mods[id]||{};}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function openSection(id){state.current=id;render();window.scrollTo({top:0,behavior:'smooth'})}
+function getIndex(id){return sectionOrder.indexOf(id)}
+function progress(){return sectionOrder.filter(s=>state.done[s]).length}
+function score(){ if(!state.attempts) return 100; return Math.max(0,Math.round((state.correct/state.attempts)*100)); }
+function setStateClass(){
+  document.querySelectorAll('.region').forEach(el=>{
+    const id=el.dataset.section;el.classList.remove('active','done','alert','pending');
+    if(id===state.current) el.classList.add('active');
+    if(state.done[id]) el.classList.add(scenarioFinding(id).alert?'alert':'done');
+    else if(id && state.checked[id]) el.classList.add('pending');
+  });
+  document.getElementById('skinHalo').setAttribute('opacity',state.done.skin?'1':'0');
+}
+function renderBadges(){const row=document.getElementById('badgeRow');row.innerHTML='';['neuro','resp','cardio','gi','gu','msk','skin'].forEach(id=>{const b=document.createElement('span');b.className='sysbadge'+(state.done[id]?(scenarioFinding(id).alert?' alert':' done'):'');b.textContent=(state.done[id]?'✓ ':'')+sections[id].title.replace(' System','');row.appendChild(b)})}
+function renderTabs(){tabs.innerHTML='';sectionOrder.forEach((id,i)=>{const b=document.createElement('button');b.className='tab'+(state.current===id?' active':'');b.textContent=(state.done[id]?'✓ ':'')+(i+1)+'. '+sections[id].title.split(' ')[0];b.onclick=()=>openSection(id);tabs.appendChild(b)})}
+function sectionSummary(id){
+ const s=sections[id];
+ const mod=scenarioFinding(id);
+ const finding=mod.finding||s.finding;
+ const status = mod.alert ? 'Abnormal finding noted' : 'No acute concern identified';
+ return `
+   <div class="summary-row"><span>System</span><strong>${s.title}</strong></div>
+   <div class="summary-row"><span>Assessment</span><p>${s.sub}</p></div>
+   <div class="summary-row"><span>Findings</span><p>${finding}</p></div>
+   <div class="summary-row"><span>Status</span><p>${status}</p></div>
+ `;
+}
+function finalClinicalSummary(){
+ const completed = sectionOrder.filter(id => state.done[id] || state.answered[id] != null);
+ if (!completed.length) return '<div class="tiny">No assessment report generated yet.</div>';
+ const lines = completed.map(id => `${sections[id].title}: ${scenarioFinding(id).finding || sections[id].finding}`);
+ return `<div class="tiny" style="text-align:left;line-height:1.6;">Final medical summary: ${lines.join(' • ')}</div>`;
+}
+function render(){
+ const s=sections[state.current],idx=getIndex(state.current);
+ document.getElementById('sectionEyebrow').textContent=`CHECK-OFF STEP ${idx+1} OF ${sectionOrder.length}`;
+ document.getElementById('sectionTitle').textContent=s.title;document.getElementById('sectionSub').textContent=s.sub;
+ document.getElementById('score').textContent=score();
+ renderTabs();setStateClass();renderBadges();
+ const isAnswered=state.answered[state.current];
+ const checkedSet=state.checked[state.current]||[];
+ const mod=scenarioFinding(state.current); const finding=mod.finding||s.finding;
+ const nclexPriority = nclexPriorities[state.current] || 'NCLEX priority: always prioritize patient safety, accurate assessment, and timely clinical judgment.';
+ content.innerHTML=`
+   <div class="card nclex-banner">
+     <div class="eyebrow">NCLEX PRIORITY</div>
+     <strong>${nclexPriority}</strong>
+   </div>
+   <div class="card">
+     <div class="quizq">${s.quiz.q}</div>
+     <div class="options">${s.quiz.opts.map((o,i)=>`<button class="option ${isAnswered!=null?(i===s.quiz.correct?'correct':(isAnswered===i&&i!==s.quiz.correct?'wrong':'')):''}" data-opt="${i}" ${isAnswered!=null?'disabled':''}>${String.fromCharCode(65+i)}. ${o}</button>`).join('')}</div>
+     <div class="feedback ${isAnswered!=null?'show '+(isAnswered===s.quiz.correct?'good':'bad'):''}">${isAnswered==null?'':(isAnswered===s.quiz.correct?'Correct. ':'Review this step. ')+s.quiz.why}</div>
+   </div>
+   <div class="card">
+     <h3>Perform the check-off actions</h3>
+     <div class="checklist">${s.steps.map((x,i)=>`<div class="checkitem"><div class="checknum">${i+1}</div><div><b>${x[0]}</b><p>${x[1]}</p></div><button class="checkmark ${checkedSet.includes(i)?'done':''}" data-check="${i}">${checkedSet.includes(i)?'✓':''}</button></div>`).join('')}</div>
+   </div>
+   <div class="card">
+      <h3>Reveal the patient finding</h3>
+      <div class="perform"><button class="primary" id="performBtn">${state.done[state.current]?'Assessment completed ✓':'Perform assessment'}</button><button class="ghost" id="speakBtn">🔊 Hear patient response</button></div>
+      <div class="finding ${state.done[state.current]?'show':''} ${mod.alert?'alert':''}" id="finding"><div class="tag">${mod.alert?'ABNORMAL PRACTICE FINDING':'PATIENT FINDING'}</div>${finding}</div>
+   </div>
+   <div class="card tip"><div class="tipline"><div class="tipicon">💡</div><div><b>${s.tip}</b><div class="tiny" style="margin-top:5px">Use the check-off sequence first; then apply NCLEX priority frameworks such as safety, airway-breathing-circulation, and patient-centered care.</div></div></div></div>
+   <div class="card report-card"><h3>Medical report summary</h3><div class="report-summary">${sectionSummary(state.current)}</div></div>
+   ${referenceCards(state.current)}
+   <div class="complete-banner ${progress()===sectionOrder.length?'show':''}"><h3>Check-off simulation complete</h3><div>You completed all 10 sections. Final practice accuracy: <b>${score()}%</b>.</div><div style="margin-top:10px">${finalClinicalSummary()}</div><div style="margin-top:10px"><button class="primary" onclick="resetApp()">Practice again</button></div></div>`;
+ content.querySelectorAll('.option').forEach(btn=>btn.onclick=()=>answer(+btn.dataset.opt));
+ content.querySelectorAll('[data-check]').forEach(btn=>btn.onclick=()=>toggleCheck(+btn.dataset.check));
+ document.getElementById('performBtn').onclick=performAssessment;document.getElementById('speakBtn').onclick=speakFinding;
+ updateGlobal();
+}
+function referenceCards(id){
+ const maps={
+  neuro:[['PERRLA','Equal • round • reactive to light • accommodation'],['Pupil scale','Pocket card shows 2–9 mm visual sizing'],['Orientation','Person • place • date/situation'],['Carotids','Palpate one side at a time']],
+  resp:[['Eupnea','Regular, comfortable breathing'],['Tachypnea','Course card: >20 breaths/min'],['Bradypnea','Course card: <12 breaths/min'],['Lung map','Compare side to side, anterior & posterior']],
+  cardio:[['Capillary refill','Course pocket card: normal <3 sec'],['Pulse scale','0 absent • 1 weak • 2 normal • 3 full • 4 bounding'],['PMI / apex','Mitral area, left 5th ICS near MCL'],['Edema','Pocket card uses 1+ through 4+']],
+  gi:[['Sequence','Inspect → auscultate → palpate'],['Quadrants','RUQ • LUQ • RLQ • LLQ'],['Ask','Nausea • vomiting • last BM'],['Palpation','Softness • tenderness • rigidity • guarding']],
+  gu:[['History','Voiding pattern • dysuria • urgency'],['Catheter','If present: urine characteristics & output']],
+  msk:[['Strength scale','0 no movement → 5 normal strength'],['Compare','Bilateral upper and lower extremities'],['ROM','Active movement before passive when able']],
+  skin:[['Turgor','Recoil after pinching; consider age-related elasticity'],['Edema','Pitting vs non-pitting'],['Integrity','Lesions • wounds • pressure areas'],['Devices','IVs • tubes • drains • dressings']],
+  pain:[['Pain scale','0–10 on the supplied pocket reference'],['OPQRST','Focused symptom analysis mnemonic']],
+  prep:[['ABCs','Airway • breathing • circulation • safety'],['Identity','Use 2 patient identifiers']],
+  safety:[['Finish','Bed low • rails x2 • call light'],['Privacy','Keep patient covered and respected']]
+ };
+ const a=maps[id]||[]; if(!a.length) return '';
+ return `<div class="card"><h3>Quick reference</h3><div class="refgrid">${a.map(x=>`<div class="refcard"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div></div>`
+}
+function answer(i){if(state.answered[state.current]!=null)return;state.attempts++;state.answered[state.current]=i;if(i===sections[state.current].quiz.correct){state.correct++;toast('Correct — continue the assessment')}else toast('Not quite — review the rationale');render()}
+function toggleCheck(i){const id=state.current;state.checked[id]=state.checked[id]||[];const p=state.checked[id].indexOf(i);if(p>=0)state.checked[id].splice(p,1);else state.checked[id].push(i);render()}
+function performAssessment(){const id=state.current,s=sections[id];const all=(state.checked[id]||[]).length===s.steps.length;if(state.answered[id]==null){toast('Answer the best-action question first');return}if(!all){toast('Check each required action before revealing the finding');return}state.done[id]=true;render();toast(scenarioFinding(id).alert?'Abnormal finding revealed — notice the red body cue':'Section complete — body map updated')}
+function speakFinding(){const s=sections[state.current];const mod=scenarioFinding(state.current);const text=mod.finding||s.finding;if('speechSynthesis' in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.96;speechSynthesis.speak(u)}else toast('Speech is not supported in this browser')}
+function getSavedRecords(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch{return [];}}
+function updateRecordMeta(){const count=getSavedRecords().length;const meta=document.getElementById('recordMeta');if(!meta)return;meta.textContent=count ? `Saved records: ${count} assessment entry${count===1?'':'ies'} available locally.` : 'No saved assessment records yet.';}
+function saveCurrentRecord(){const record={id:Date.now(),timestamp:new Date().toISOString(),scenario:state.scenario,scenarioName:scenarios[state.scenario].name,score:score(),progress:progress(),attempts:state.attempts,correct:state.correct,answered:{...state.answered},checked:{...state.checked},done:{...state.done},currentSection:state.current};const records=getSavedRecords();records.unshift(record);localStorage.setItem(STORAGE_KEY,JSON.stringify(records.slice(0,25)));updateRecordMeta();toast('Assessment record saved locally');return record;}
+function exportRecords(){const records=getSavedRecords();if(!records.length){toast('No records to export yet');return;}const blob=new Blob([JSON.stringify(records,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='head-to-toe-assessment-records.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);toast('JSON export downloaded');}
+function buildPrintableReport(){const scenario=scenarios[state.scenario];const completed=sectionOrder.filter(id=>state.done[id] || state.answered[id] != null);const rows=sectionOrder.map(id=>{const title=sections[id].title;const answered=state.answered[id] != null ? (state.answered[id]===sections[id].quiz.correct ? 'Correct' : 'Incorrect') : 'Not answered';const done=state.done[id] ? 'Completed' : 'Incomplete';const checks=(state.checked[id]||[]).length+'/'+sections[id].steps.length;return `<tr><td>${title}</td><td>${answered}</td><td>${done}</td><td>${checks}</td></tr>`;}).join('');
+const html=`<!doctype html><html><head><meta charset="utf-8"><title>Student Assessment Report</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#222}h1{margin:0 0 8px}table{border-collapse:collapse;width:100%;margin-top:16px}th,td{border:1px solid #d8dfe1;padding:8px 10px;text-align:left;font-size:12px}th{background:#f2f7f8}p{margin:6px 0;font-size:13px}.meta{display:grid;grid-template-columns:repeat(2, minmax(180px,1fr));gap:8px 20px;margin:16px 0}.card{border:1px solid #dfeaea;padding:12px;border-radius:10px;margin-top:12px} @media print { body { padding: 12px; } button { display: none; } }</style></head><body><h1>Head-to-Toe Assessment Student Report</h1><p><strong>Scenario:</strong> ${scenario.name}</p><div class="meta"><div><strong>Score:</strong> ${score()}%</div><div><strong>Progress:</strong> ${progress()}/${sectionOrder.length}</div><div><strong>Attempts:</strong> ${state.attempts}</div><div><strong>Correct:</strong> ${state.correct}</div></div><div class="card"><h3>Clinical summary</h3><p>${finalClinicalSummary().replace(/<[^>]+>/g,'')}</p></div><div class="card"><h3>Section overview</h3><table><thead><tr><th>Section</th><th>Question status</th><th>Completion</th><th>Checks</th></tr></thead><tbody>${rows}</tbody></table></div></body></html>`;return html;}
+function printStudentReport(){const report = buildPrintableReport();const win = window.open('', '_blank'); if(!win){toast('Please allow pop-ups to print the report');return;} win.document.write(report); win.document.close(); win.focus(); setTimeout(()=>{win.print();},300);}
+function updateGlobal(){const p=progress(),pct=Math.round(p/sectionOrder.length*100);document.getElementById('progressBar').style.width=pct+'%';document.getElementById('topProgress').textContent=pct+'%';document.getElementById('progressText').textContent=`${p} of ${sectionOrder.length} sections complete`;document.getElementById('accuracyText').textContent=`Accuracy ${score()}%`}
+function nextSection(){let i=getIndex(state.current);openSection(sectionOrder[Math.min(sectionOrder.length-1,i+1)])}
+function startTimer(){if(state.timerRunning)return;state.timerRunning=true;document.getElementById('timer').classList.add('running');state.timerId=setInterval(()=>{state.timer--;if(state.timer<=0){state.timer=0;clearInterval(state.timerId);state.timerRunning=false;toast('30-minute check-off timer ended')}updateTimer()},1000);toast('30-minute check-off timer started')}
+function updateTimer(){let m=Math.floor(state.timer/60),sec=state.timer%60;document.getElementById('timerText').textContent=`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;document.getElementById('timer').classList.toggle('urgent',state.timer<=300)}
+function resetApp(){if(state.timerId)clearInterval(state.timerId);state={current:'prep',scenario:state.scenario,done:{},checked:{},answered:{},attempts:0,correct:0,timer:1800,timerRunning:false,timerId:null,view:'front'};updateTimer();render();toast('Practice reset')}
+function setScenario(id){if(state.timerId)clearInterval(state.timerId);state={...state,current:'prep',scenario:id,done:{},checked:{},answered:{},attempts:0,correct:0,timer:difficultyConfig[state.difficulty].timer,timerRunning:false,timerId:null,view:'front'};document.getElementById('scenarioLabel').textContent=scenarios[id].name;closeModals();updateTimer();render();toast('Scenario loaded')}
+function closeModals(){document.querySelectorAll('.modal').forEach(m=>{m.classList.remove('show');m.setAttribute('aria-hidden','true')})}
+function refreshDifficultyUI(){const cards=document.querySelectorAll('.difficulty-card');cards.forEach(card=>card.classList.toggle('active',card.dataset.difficulty===state.difficulty));}
+function setDifficulty(level){state.difficulty=level;state.timer=difficultyConfig[level].timer;updateTimer();refreshDifficultyUI();
+  const modeLabel=document.getElementById('modeDescriptor');
+  if(modeLabel){modeLabel.textContent = difficultyConfig[level].label + ' • Access mode'; }
+}
+function startAssessment(){state.started=true;document.getElementById('startOverlay').classList.add('hidden');state.timer=difficultyConfig[state.difficulty].timer;updateTimer();render();toast('Difficulty set to ' + difficultyConfig[state.difficulty].label);}
+function startPreview(){document.getElementById('startOverlay').classList.add('hidden');state.started=true;applyMode('dashboard');toast('Preview mode opened');}
+function buildModals(){
+ const sl=document.getElementById('sourceList');sl.innerHTML=sectionOrder.map((id,i)=>`<div class="checkitem"><div class="checknum">${i+1}</div><div><b>${sections[id].title}</b><p>${sections[id].steps.map(x=>x[0]).join(' • ')}</p></div></div>`).join('');
+ const sc=document.getElementById('scenarioList');sc.innerHTML=Object.entries(scenarios).map(([id,x])=>`<button class="checkitem" style="text-align:left;cursor:pointer" data-scenario="${id}"><div class="checknum">${id==='normal'?'N':id==='resp'?'R':id==='neuro'?'N':'P'}</div><div><b>${x.name}</b><p>${x.desc}</p></div><div>›</div></button>`).join('');
+ sc.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=()=>setScenario(b.dataset.scenario));
+}
+
+function getStoredMode(){
+  const hash = (location.hash || '').replace('#','').trim();
+  const hashMode = hash === 'preview' || hash === 'classic' || hash === 'luxury' || hash === 'dashboard' ? hash : null;
+  const saved = localStorage.getItem('httAssessmentMode');
+  if (hashMode) return hashMode;
+  if (saved === 'preview' || saved === 'classic' || saved === 'luxury' || saved === 'dashboard') return saved;
+  return 'luxury';
+}
+function normalizeMode(mode){
+  if (mode === 'preview') return 'dashboard';
+  if (mode === 'classic') return 'luxury';
+  return mode === 'dashboard' ? 'dashboard' : 'luxury';
+}
+function applyMode(mode){
+  const target = normalizeMode(mode);
+  document.body.classList.toggle('classic-mode', target === 'luxury');
+  document.body.classList.toggle('preview-mode', target === 'dashboard');
+  document.querySelectorAll('.mode-btn').forEach((btn)=> {
+    btn.classList.toggle('active', btn.dataset.mode === target);
+  });
+  const descriptor = document.getElementById('modeDescriptor');
+  const headerSub = document.getElementById('headerSub');
+  if (target === 'luxury') {
+    if (descriptor) descriptor.textContent = 'NCLEX Priority Flow';
+    if (headerSub) headerSub.textContent = 'VNSG 1502 practice • safety-first nursing care • NCLEX-style reasoning';
+  } else {
+    if (descriptor) descriptor.textContent = 'NCLEX Dashboard';
+    if (headerSub) headerSub.textContent = 'Clinical check-off workflow • priority-based reasoning • patient safety focus';
+  }
+  localStorage.setItem('httAssessmentMode', target);
+  location.hash = target === 'luxury' ? '#luxury' : '#dashboard';
+}
+
+document.querySelectorAll('.mode-btn').forEach((btn)=> {
+  btn.addEventListener('click', ()=> applyMode(btn.dataset.mode));
+});
+
+document.querySelectorAll('.difficulty-card').forEach((btn)=> {
+  btn.addEventListener('click', ()=> setDifficulty(btn.dataset.difficulty));
+});
+document.getElementById('startAssessmentBtn')?.addEventListener('click', startAssessment);
+document.getElementById('startPreviewBtn')?.addEventListener('click', startPreview);
+
+document.querySelectorAll('.region').forEach(el=>{el.addEventListener('click',()=>openSection(el.dataset.section));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openSection(el.dataset.section)}})});
+document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSection(b.dataset.open));
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('frontSvg').style.display=state.view==='front'?'block':'none';document.getElementById('backSvg').style.display=state.view==='back'?'block':'none'});
+document.getElementById('sourceBtn').onclick=()=>{document.getElementById('sourceModal').classList.add('show');document.getElementById('sourceModal').setAttribute('aria-hidden','false')};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeModals);document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModals()}));
+document.querySelectorAll('.bottomnav button').forEach(b=>b.onclick=()=>{const n=b.dataset.nav;if(n==='record')saveCurrentRecord();if(n==='next')nextSection();if(n==='scenario'){document.getElementById('scenarioModal').classList.add('show');document.getElementById('scenarioModal').setAttribute('aria-hidden','false')}if(n==='timer')state.timerRunning?toast('Timer already running'):startTimer();if(n==='reset')resetApp();if(n==='patient')window.scrollTo({top:0,behavior:'smooth'})});
+document.getElementById('saveRecordBtn')?.addEventListener('click',saveCurrentRecord);
+document.getElementById('exportRecordsBtn')?.addEventListener('click',exportRecords);
+document.getElementById('printReportBtn')?.addEventListener('click',printStudentReport);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')nextSection();if(e.key==='Escape')closeModals()});
+buildModals();applyMode(getStoredMode());setDifficulty('beginner');refreshDifficultyUI();render();updateTimer();updateRecordMeta();
+</script>
+</body>
+</html>
